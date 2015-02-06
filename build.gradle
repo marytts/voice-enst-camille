@@ -2,12 +2,3 @@ apply plugin: 'de.dfki.mary.voicebuilding'
 
 group 'de.dfki.mary'
 version '5.1.2'
-
-voice {
-    name 'enst-camille'
-    language 'fr'
-    gender 'female'
-    type 'unit selection'
-    description 'A female French unit selection voice, built at Télécom ParisTech (ENST) using data recorded by Camille Dianoux'
-    samplingRate 16000
-}
