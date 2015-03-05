@@ -1,6 +1,8 @@
 voice {
     name = 'enst-camille'
-    language = 'fr'
+    locale {
+        language = 'fr'
+    }
     gender = 'female'
     type = 'unit selection'
     description = 'A female French unit selection voice, built at Télécom ParisTech (ENST) using data recorded by Camille Dianoux'
