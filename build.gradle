@@ -57,3 +57,19 @@ wav {
     srcDir = file("$processDataResources.destinationDir/audio")
     srcFileExt = 'flac'
 }
+
+task text(type: Copy) {
+    from processDataResources
+    into buildDir
+    include 'text/*.txt'
+}
+
+task lab(type: Copy) {
+    from processDataResources
+    into buildDir
+    include 'lab/*.lab'
+}
+
+legacyInit {
+    dependsOn wav, text, lab
+}
