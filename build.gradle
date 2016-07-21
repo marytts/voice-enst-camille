@@ -37,3 +37,18 @@ task downloadData(type: Download) {
     overwrite false
     acceptAnyCertificate true
 }
+
+processDataResources {
+    dependsOn downloadAudio, downloadData
+    from tarTree(downloadAudio.destFile)
+    from zipTree(downloadData.destFile), {
+        include '**/*.txt', '**/*.lab'
+        filesMatching '**/*.txt', {
+            path = "text/$it.name"
+        }
+        filesMatching '**/*.lab', {
+            path = "lab/$it.name"
+        }
+        includeEmptyDirs = false
+    }
+}
