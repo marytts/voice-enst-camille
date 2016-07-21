@@ -29,3 +29,11 @@ task downloadAudio(type: Download) {
     overwrite false
     acceptAnyCertificate true
 }
+
+task downloadData(type: Download) {
+    ext.destFile = file("$buildDir/enst-camille-data.zip")
+    src "https://github.com/marytts/enst-camille-data/archive/v0.1.zip"
+    dest destFile
+    overwrite false
+    acceptAnyCertificate true
+}
