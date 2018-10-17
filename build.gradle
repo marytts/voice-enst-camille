@@ -54,7 +54,26 @@ flaml {
     flacFile = file("$buildDir/enst-camille-data.flac")
 }
 
+extractWavFiles {
+    dependsOn unpackData
+    destDir = layout.buildDirectory.dir('wav_orig')
+}
+
+extractTextFiles {
+    dependsOn unpackData
+}
+
+extractLabFiles {
+    dependsOn unpackData
+}
+
+wav {
+    dependsOn extractWavFiles
+    srcDir = extractWavFiles.destDir.get().asFile
+}
+
 legacyInit {
+    dependsOn wav, extractTextFiles, extractLabFiles
     def basenameListFile = file("$buildDir/basenames.lst")
     outputs.files basenameListFile
     doLast {
