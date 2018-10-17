@@ -6,7 +6,7 @@ voice-enst-camille
 
 ### Changed
 
-- build with Gradle v3.5
+- build with Gradle v4.10.2
 - uses voicebuilding plugin v5.2.2
 - [all changes since v5.2]
 
