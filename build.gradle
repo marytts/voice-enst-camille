@@ -1,6 +1,6 @@
 plugins {
+    id 'org.m2ci.msp.flaml' version '0.3.0'
     id 'de.dfki.mary.voicebuilding-legacy' version '5.2.2'
-    id 'de.undercouch.download' version '3.1.0'
 }
 
 group 'de.dfki.mary'
@@ -20,58 +20,41 @@ voice {
     samplingRate = 16000
 }
 
-import de.undercouch.gradle.tasks.download.Download
-
-task downloadAudio(type: Download) {
-    ext.destFile = file("$buildDir/audio.tar")
-    src "https://github.com/marytts/enst-camille-data/releases/download/v0.1/$destFile.name"
-    dest destFile.parentFile
-    overwrite false
-    acceptAnyCertificate true
-}
-
-task downloadData(type: Download) {
-    ext.destFile = file("$buildDir/enst-camille-data.zip")
-    src "https://github.com/marytts/enst-camille-data/archive/v0.1.zip"
-    dest destFile
-    overwrite false
-    acceptAnyCertificate true
-}
-
-processDataResources {
-    dependsOn downloadAudio, downloadData
-    from tarTree(downloadAudio.destFile)
-    from zipTree(downloadData.destFile), {
-        include '**/*.txt', '**/*.lab'
-        filesMatching '**/*.txt', {
-            path = "text/$it.name"
+repositories {
+    ivy {
+        url 'https://github.com/marytts'
+        layout 'pattern', {
+            ivy '[module]/releases/download/v[revision]/ivy-[revision].xml'
+            artifact '[module]/releases/download/v[revision]/[module]-[revision].[ext]'
         }
-        filesMatching '**/*.lab', {
-            path = "lab/$it.name"
-        }
-        includeEmptyDirs = false
     }
 }
 
-wav {
-    srcDir = file("$processDataResources.destinationDir/audio")
-    srcFileExt = 'flac'
+dependencies {
+    data group: 'de.dfki.mary', name: 'enst-camille-data', version: '0.2-rc1'
 }
 
-task text(type: Copy) {
-    from processDataResources
+task unpackData(type: Copy) {
+    from files(configurations.data)
     into buildDir
-    include 'text/*.txt'
+    filesMatching '*.zip', { details ->
+        copy {
+            from zipTree(details.file)
+            into destinationDir
+        }
+        details.exclude()
+    }
+    filesMatching '*.flac', {
+        it.name = 'enst-camille-data.flac'
+    }
 }
 
-task lab(type: Copy) {
-    from processDataResources
-    into buildDir
-    include 'lab/*.lab'
+flaml {
+    yamlFile = file("$buildDir/enst-camille-data.yaml")
+    flacFile = file("$buildDir/enst-camille-data.flac")
 }
 
 legacyInit {
-    dependsOn wav, text, lab
     def basenameListFile = file("$buildDir/basenames.lst")
     outputs.files basenameListFile
     doLast {
