@@ -36,45 +36,32 @@ dependencies {
     data group: 'de.dfki.mary', name: 'enst-camille-data', version: '0.2-rc1'
 }
 
-task unpackData(type: Copy) {
-    from files(configurations.data)
-    into buildDir
-    filesMatching '*.zip', { details ->
-        copy {
-            from zipTree(details.file)
-            into destinationDir
-        }
-        details.exclude()
-    }
-    filesMatching '*.flac', {
-        it.name = 'enst-camille-data.flac'
-    }
-}
-
-flaml {
+task unpackData(type: CopyFlamlFiles) {
     yamlFile = file("$buildDir/enst-camille-data.yaml")
     flacFile = file("$buildDir/enst-camille-data.flac")
 }
 
 extractWavFiles {
-    dependsOn unpackData
+    flacFile = unpackData.flacFile
+    yamlFile = unpackData.yamlFile
     destDir = layout.buildDirectory.dir('wav_orig')
 }
 
 extractTextFiles {
-    dependsOn unpackData
+    yamlFile = unpackData.yamlFile
 }
 
 extractLabFiles {
-    dependsOn unpackData
+    yamlFile = unpackData.yamlFile
 }
 
 wav {
-    dependsOn extractWavFiles
-    srcDir = extractWavFiles.destDir.get().asFile
+    srcDir = extractWavFiles.destDir
 }
 
 basenames {
+    textDir = extractTextFiles.destDir
+    labDir = extractLabFiles.destDir
     exclude 'text_0237',
             'text_0281',
             'text_0292',
@@ -93,4 +80,31 @@ basenames {
             'text_0898',
             'text_0908',
             'text_0916'
+}
+
+class CopyFlamlFiles extends DefaultTask {
+
+    @OutputFile
+    final RegularFileProperty yamlFile = newOutputFile()
+
+    @OutputFile
+    final RegularFileProperty flacFile = newOutputFile()
+
+    @TaskAction
+    void copy() {
+        project.copy {
+            from project.files(project.configurations.data)
+            into project.buildDir
+            filesMatching '*.zip', { details ->
+                project.copy {
+                    from project.zipTree(details.file)
+                    into project.buildDir
+                }
+                details.exclude()
+            }
+            filesMatching '*.flac', {
+                it.name = flacFile.get().asFile.name
+            }
+        }
+    }
 }
