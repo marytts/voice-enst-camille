@@ -1,23 +1,25 @@
 plugins {
     id 'org.m2ci.msp.flaml' version '0.3.0'
-    id 'de.dfki.mary.voicebuilding-legacy' version '5.2.2'
+    id 'de.dfki.mary.voicebuilding-legacy' version '5.4'
 }
 
 group 'de.dfki.mary'
 version '5.3-SNAPSHOT'
 
-voice {
-    name = 'enst-camille'
-    language = 'fr'
-    gender = 'female'
-    type = 'unit selection'
-    description = 'A female French unit selection voice, built at Télécom ParisTech (ENST) using data recorded by Camille Dianoux'
-    license {
-        name = 'Creative Commons Attribution-ShareAlike 3.0 Unported'
-        shortName = 'CC-BY-SA'
-        url = 'http://mary.dfki.de/download/by-sa-3.0.html'
+marytts {
+    voice {
+        name = 'enst-camille'
+        language = 'fr'
+        gender = 'female'
+        type = 'unit selection'
+        description = 'A female French unit selection voice, built at Télécom ParisTech (ENST) using data recorded by Camille Dianoux'
+        license {
+            name = 'Creative Commons Attribution-ShareAlike 3.0 Unported'
+            shortName = 'CC-BY-SA'
+            url = 'http://mary.dfki.de/download/by-sa-3.0.html'
+        }
+        samplingRate = 16000
     }
-    samplingRate = 16000
 }
 
 repositories {
@@ -72,36 +74,23 @@ wav {
     srcDir = extractWavFiles.destDir.get().asFile
 }
 
-legacyInit {
-    dependsOn wav, extractTextFiles, extractLabFiles
-    def basenameListFile = file("$buildDir/basenames.lst")
-    outputs.files basenameListFile
-    doLast {
-        basenameListFile.withWriter { basenameList ->
-            fileTree(wav.destDir).collect {
-                it.name - '.wav'
-            }.minus([
-                    'text_0237',
-                    'text_0281',
-                    'text_0292',
-                    'text_0337',
-                    'text_0341',
-                    'text_0346',
-                    'text_0363',
-                    'text_0411',
-                    'text_0512',
-                    'text_0529',
-                    'text_0530',
-                    'text_0578',
-                    'text_0624',
-                    'text_0643',
-                    'text_0737',
-                    'text_0898',
-                    'text_0908',
-                    'text_0916'
-            ]).each {
-                basenameList.writeLine it
-            }
-        }
-    }
+basenames {
+    exclude 'text_0237',
+            'text_0281',
+            'text_0292',
+            'text_0337',
+            'text_0341',
+            'text_0346',
+            'text_0363',
+            'text_0411',
+            'text_0512',
+            'text_0529',
+            'text_0530',
+            'text_0578',
+            'text_0624',
+            'text_0643',
+            'text_0737',
+            'text_0898',
+            'text_0908',
+            'text_0916'
 }
