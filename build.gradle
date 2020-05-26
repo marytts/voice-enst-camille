@@ -1,23 +1,25 @@
 plugins {
     id 'org.m2ci.msp.flaml' version '0.3.0'
-    id 'de.dfki.mary.voicebuilding-legacy' version '5.2.2'
+    id 'de.dfki.mary.voicebuilding-legacy' version '5.4'
 }
 
 group 'de.dfki.mary'
 version '5.3-SNAPSHOT'
 
-voice {
-    name = 'enst-camille'
-    language = 'fr'
-    gender = 'female'
-    type = 'unit selection'
-    description = 'A female French unit selection voice, built at Télécom ParisTech (ENST) using data recorded by Camille Dianoux'
-    license {
-        name = 'Creative Commons Attribution-ShareAlike 3.0 Unported'
-        shortName = 'CC-BY-SA'
-        url = 'http://mary.dfki.de/download/by-sa-3.0.html'
+marytts {
+    voice {
+        name = 'enst-camille'
+        language = 'fr'
+        gender = 'female'
+        type = 'unit selection'
+        description = 'A female French unit selection voice, built at Télécom ParisTech (ENST) using data recorded by Camille Dianoux'
+        license {
+            name = 'Creative Commons Attribution-ShareAlike 3.0 Unported'
+            shortName = 'CC-BY-SA'
+            url = 'http://mary.dfki.de/download/by-sa-3.0.html'
+        }
+        samplingRate = 16000
     }
-    samplingRate = 16000
 }
 
 repositories {
@@ -34,73 +36,74 @@ dependencies {
     data group: 'de.dfki.mary', name: 'enst-camille-data', version: '0.2-rc1'
 }
 
-task unpackData(type: Copy) {
-    from files(configurations.data)
-    into buildDir
-    filesMatching '*.zip', { details ->
-        copy {
-            from zipTree(details.file)
-            into destinationDir
-        }
-        details.exclude()
-    }
-    filesMatching '*.flac', {
-        it.name = 'enst-camille-data.flac'
-    }
-}
-
-flaml {
+task unpackData(type: CopyFlamlFiles) {
     yamlFile = file("$buildDir/enst-camille-data.yaml")
     flacFile = file("$buildDir/enst-camille-data.flac")
 }
 
 extractWavFiles {
-    dependsOn unpackData
+    flacFile = unpackData.flacFile
+    yamlFile = unpackData.yamlFile
     destDir = layout.buildDirectory.dir('wav_orig')
 }
 
 extractTextFiles {
-    dependsOn unpackData
+    yamlFile = unpackData.yamlFile
 }
 
 extractLabFiles {
-    dependsOn unpackData
+    yamlFile = unpackData.yamlFile
 }
 
 wav {
-    dependsOn extractWavFiles
-    srcDir = extractWavFiles.destDir.get().asFile
+    srcDir = extractWavFiles.destDir
 }
 
-legacyInit {
-    dependsOn wav, extractTextFiles, extractLabFiles
-    def basenameListFile = file("$buildDir/basenames.lst")
-    outputs.files basenameListFile
-    doLast {
-        basenameListFile.withWriter { basenameList ->
-            fileTree(wav.destDir).collect {
-                it.name - '.wav'
-            }.minus([
-                    'text_0237',
-                    'text_0281',
-                    'text_0292',
-                    'text_0337',
-                    'text_0341',
-                    'text_0346',
-                    'text_0363',
-                    'text_0411',
-                    'text_0512',
-                    'text_0529',
-                    'text_0530',
-                    'text_0578',
-                    'text_0624',
-                    'text_0643',
-                    'text_0737',
-                    'text_0898',
-                    'text_0908',
-                    'text_0916'
-            ]).each {
-                basenameList.writeLine it
+basenames {
+    textDir = extractTextFiles.destDir
+    labDir = extractLabFiles.destDir
+    exclude 'text_0237',
+            'text_0281',
+            'text_0292',
+            'text_0337',
+            'text_0341',
+            'text_0346',
+            'text_0363',
+            'text_0411',
+            'text_0512',
+            'text_0529',
+            'text_0530',
+            'text_0578',
+            'text_0624',
+            'text_0643',
+            'text_0737',
+            'text_0898',
+            'text_0908',
+            'text_0916'
+}
+
+class CopyFlamlFiles extends DefaultTask {
+
+    @OutputFile
+    final RegularFileProperty yamlFile = newOutputFile()
+
+    @OutputFile
+    final RegularFileProperty flacFile = newOutputFile()
+
+    @TaskAction
+    void copy() {
+        project.copy {
+            from project.files(project.configurations.data)
+            into project.buildDir
+            filesMatching '*.zip', { details ->
+                project.copy {
+                    from project.zipTree(details.file)
+                    into project.buildDir
+                }
+                details.exclude()
+            }
+            filesMatching '*.flac', {
+                it.name = flacFile.get().asFile.name
             }
         }
     }
